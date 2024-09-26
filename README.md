@@ -6,7 +6,7 @@
 
 Howdy !
 
-This is a GDNative project for Godot game engine, that introduces Dijktra Map pathfinding node. It provides a much needed versatility currently absent from the build-in AStar pathfinding. Its main feature is the ability to populate the entire graph with shortest paths towards a given origin point. Total lengths of shortest paths and directions can then be easily looked up for any point in the graph.
+This is a GDNative project for Godot game engine, that introduces Dijkstra Map pathfinding node. It provides a much needed versatility currently absent from the build-in AStar pathfinding. Its main feature is the ability to populate the entire graph with shortest paths towards a given origin point. Total lengths of shortest paths and directions can then be easily looked up for any point in the graph.
 
 Common use cases include: pre-computing pathfinding for tower-defense games, RTS games and roguelikes; listing available moves for turn-based games; aiding in movement-related AI behaviour. You can find more examples in [this amazing article](http://www.roguebasin.com/index.php?title=Dijkstra_Maps_Visualized).
 
@@ -17,9 +17,15 @@ Note that the [API](./addons/dijkstra-map/doc/index.md) is now stable! Some feat
 
 ## Installing
 
+Note: when installing pre-compiled libraries, we support
+
+- On linux: Ubuntu 20.04 or higher
+- On macos: The latest macOS version (11 at the time of writing)
+- On windows: Windows 10 or higher (presumably)
+
 ### Method 1: from the asset store (recommended)
 
-This will work for linux x64, macos x86 and windows x64 :
+This will work for linux x64, macos x86 and windows x64 for godot 3.5.1 (for another godot version you'll probably have to use the second method):
 1. In the godot editor, go to the `AssetLib` tab
 
     ![](assets/godot-outline-assetlib.png)
@@ -40,7 +46,7 @@ This will work for linux x64, macos x86 and windows x64 :
 1. Clone this repository
 2. Install the [Rust compiler](https://www.rust-lang.org/tools/install)
 3. Install the dependencies for the [GDNative bindings for Rust](https://github.com/GodotNativeTools/godot-rust).
-4. Run `cargo build --release`. This will build the library in `target/release` (for exampe, on windows: `target/release/dijkstra_map_gd.dll`).
+4. Run `cargo build --release`. This will build the library in `target/release` (for example, on windows: `target/release/dijkstra_map_gd.dll`).
     
 	Note that this might take some time as it compiles all the dependencies for the first time.
 
@@ -53,13 +59,15 @@ This will work for linux x64, macos x86 and windows x64 :
 There are 3 examples scenes in the github repository:
 * `addons/dijkstra-map/visualization demo/visualisation.tscn`
 
-    Also available through the [asset store installation](#method-1-from-the-asset-store-recommended)
+    Also available through the [asset store installation](#method-1-from-the-asset-store-recommended). Includes C# code. 
 * `Project_Example/project_example.tscn`
 * `Project_Example/Turn based.tscn`
 
     The `knight` node contains exports variable that can be tweaked
 
 And heavily commented code in `Project_Example/dependancy/`.
+
+**Note**: all examples need [mono-based Godot](https://docs.godotengine.org/en/3.5/tutorials/scripting/c_sharp/c_sharp_basics.html) to run.
 
 You can also look at the unit tests in `Tests/unit/*`.
 
@@ -68,7 +76,7 @@ You can also look at the unit tests in `Tests/unit/*`.
 #### Basic Behaviour
 
 In Godot project you start by creating a new DijkstraMap Node.
-* First you need to specify the graph by adding points (vertices) and connections between them (edges). Unlike build-in AStar, DijkstraMap does not keep positions of the points (it only ever refers to them by their ID) and the costs of the connections need to be explicitly specified. It is user reponsibility to keep track of points' position. You can do so manually with the `add_point` and `connect_points` methods or automatically with `add_*_grid` methods (`add_square_grid` or `add_hexagonal_grid` ...)
+* First you need to specify the graph by adding points (vertices) and connections between them (edges). Unlike build-in AStar, DijkstraMap does not keep positions of the points (it only ever refers to them by their ID) and the costs of the connections need to be explicitly specified. It is user responsibility to keep track of points' position. You can do so manually with the `add_point` and `connect_points` methods or automatically with `add_*_grid` methods (`add_square_grid` or `add_hexagonal_grid` ...)
 
 * Once you've done that, you can enable or disable any points you want from the pathfinding by passing its id to `enable_point` or `disable_point` (points are enabled by default).
 
@@ -112,7 +120,7 @@ my_dijkstra_map.recalculate(origin_point, {"terrain_weights": {TERRAIN_ID_FOREST
 ```
 Now, during this recalculation, connection costs of forest points are doubled* (ie. movement speed is halved) and the shortest paths will try avoid forest points, to minimize travel time. Specifically, path segments will only lead trough forests, if they are half the length of alternative paths. 
 
-* *important note, if terrain_weights doesn't specify a terrain present in the dijkstra, this terrain will be innacessible (cost = inf)
+* *important note, if terrain_weights doesn't specify a terrain present in the dijkstra, this terrain will be inaccessible (cost = inf)
 * *note: connection costs between two points are multiplied by the average of their respective weights. All terrain weights that remain unspecified in the argument have default terrain weight of `1.0`.
 
 When recalculating the DijkstraMap for the Wagon, we specify "terrain weights" optional argument as follows:
@@ -120,6 +128,31 @@ When recalculating the DijkstraMap for the Wagon, we specify "terrain weights" o
 my_dijkstra_map.recalculate(origin_point, {"terrain_weights": {TERRAIN_ID_FOREST:INF, TERRAIN_ID_OTHER:INF} } )
 ```
 Now, during this recalculation, all points, except roads, are completely inaccessible, because their connections have infinite cost. The calculated paths will only follow roads.
+
+## C# Support
+
+A wrapper located in `addons/dijkstra-map/Dijkstra_map_library/DijkstraMap.cs` can be used to interface with the library. [Example use](#examples) can be seen in `addons/dijkstra-map/visualization demo/visualisation.tscn`. The benefits of this wrapper: 
+
+* First-class development experience (same as GDScript).
+
+    In GDScript you can do:
+    ```GDScript
+    var bmp: Rect2 = Rect2(0, 0, 23, 19)
+    var dijkstramap = DijkstraMap.new()
+    dijkstramap.add_square_grid(bmp)
+    ```
+    And then the same in C# with the DijkstraMap wrapper:
+    ```C#
+    var bmp = new Rect2(0, 0, 23, 19);
+    var dijkstramap = new DijkstraMap();
+    dijkstramap.AddSquareGrid(bmp);
+    ```
+
+* Strongly typed inputs and outputs.
+
+* NativeScript setup is already done. 
+
+Make sure your C# code can find the `DijkstraMap.cs` file and its class.
 
 ## Notes
 
@@ -147,7 +180,11 @@ Before doing that pull request, if you modified the rust code be sure you have b
 
 ## TODO
 
-* if performance on djikstra is a real heavy consideration, consider implementing threading 
+* if performance on dijkstra is a real heavy consideration, consider implementing threading 
+
+## Use in projects
+
+- [tacticalRPG](https://github.com/astrale-sharp/tacticalRPG) A in-development framework for creating a tactical rpg using Rust and possibly Godot. 
 
 ## Acknowledgments
 KohuGaly

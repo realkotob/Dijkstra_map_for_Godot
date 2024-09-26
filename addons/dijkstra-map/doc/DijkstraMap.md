@@ -1,3 +1,10 @@
+<!-- 
+This file was automatically generated using [gdnative-doc-rs](https://github.com/arnaudgolfouse/gdnative-doc-rs)
+
+Crate: dijkstra_map_gd
+Source file: lib.rs
+-->
+
 
 # DijkstraMap
 
@@ -106,8 +113,18 @@ This function returns [FAILED] if `source_instance` is not a
 ```gdscript
 var dijkstra_map = DijkstraMap.new()
 # fill dijkstra_map
+dijkstra_map.add_point(1)
+dijkstra_map.add_point(2)
+dijkstra_map.add_point(3)
+dijkstra_map.connect_points(1, 2, 1.0)
 var dijkstra_map_copy = DijkstraMap.new()
 dijkstra_map_copy.duplicate_graph_from(dijkstra_map)
+dijkstra_map.add_point(4)
+assert_true(dijkstra_map_copy.has_point(1))
+assert_true(dijkstra_map_copy.has_point(2))
+assert_true(dijkstra_map_copy.has_point(3))
+assert_true(dijkstra_map_copy.has_connection(1, 2))
+assert_false(dijkstra_map_copy.has_point(4))
 ```
 ### <a id="func-get_available_point_id"></a>func get_available_point_id() -> [int]
 ________
@@ -134,9 +151,16 @@ If a point with the given id already exists, the map is unchanged and
 [FAILED] is returned, else it returns [OK].
 #### Example
 ```gdscript
+var res: int
 var dijkstra_map = DijkstraMap.new()
-dijkstra_map.add_point(0) # terrain_type is -1
-dijkstra_map.add_point(1, 0) # terrain_type is 0
+res = dijkstra_map.add_point(0) # default terrain_type is -1
+assert_eq(res, OK)
+res = dijkstra_map.add_point(1, 0) # terrain_type is 0
+assert_eq(res, OK, "you may add a point once")
+res = dijkstra_map.add_point(1, 0)
+assert_eq(res, FAILED, "but not twice")
+res = dijkstra_map.add_point(1, 1)
+assert_eq(res, FAILED, "you cannot even change the terrain this way")
 ```
 ### <a id="func-set_terrain_for_point"></a>func set_terrain_for_point(point_id: [int], terrain_id: [int] (opt)) -> [int]
 ________
@@ -151,12 +175,15 @@ If the given id does not exists in the map, [FAILED] is returned, else
 [OK].
 #### Example
 ```gdscript
+var res: int
 var dijkstra_map = DijkstraMap.new()
 dijkstra_map.add_point(0, 2)
-dijkstra_map.set_terrain_for_point(0, 1)
-assert_eq(dijkstra_map.get_terrain_for_point(0), 1)
-dijkstra_map.set_terrain_for_point(0)
-assert_eq(dijkstra_map.get_terrain_for_point(0), -1)
+res = dijkstra_map.set_terrain_for_point(0, 1)
+assert_eq(res, OK, "you can set the point's terrain")
+assert_eq(dijkstra_map.get_terrain_for_point(0), 1, "the terrain corresponds")
+res = dijkstra_map.set_terrain_for_point(0)
+assert_eq(res, OK, "multiple times if you want")
+assert_eq(dijkstra_map.get_terrain_for_point(0), -1, "default terrain is -1")
 ```
 ### <a id="func-get_terrain_for_point"></a>func get_terrain_for_point(point_id: [int]) -> [int]
 ________
@@ -189,14 +216,23 @@ Returns [FAILED] if the point does not exists in the map, else
 ```gdscript
 var dijkstra_map = DijkstraMap.new()
 dijkstra_map.add_point(0)
-assert_eq(dijkstra_map.remove_point(0), 0)
-assert_eq(dijkstra_map.remove_point(0), 1)
+assert_eq(dijkstra_map.remove_point(0), OK)
+assert_eq(dijkstra_map.remove_point(0), FAILED)
 ```
 ### <a id="func-has_point"></a>func has_point(point_id: [int]) -> [bool]
 ________
 
 
 Returns [true] if the map contains the given point.
+#### Example
+```gdscript
+var dijkstra_map = DijkstraMap.new()
+dijkstra_map.add_point(0)
+dijkstra_map.add_point(1)
+assert_true(dijkstra_map.has_point(0))
+assert_true(dijkstra_map.has_point(1))
+assert_false(dijkstra_map.has_point(2))
+```
 ### <a id="func-disable_point"></a>func disable_point(point_id: [int]) -> [int]
 ________
 
@@ -209,8 +245,8 @@ Returns [FAILED] if the point does not exists in the map, else [OK].
 ```gdscript
 var dijkstra_map = DijkstraMap.new()
 dijkstra_map.add_point(0)
-assert_eq(dijkstra_map.disable_point(0), 0)
-assert_eq(dijkstra_map.disable_point(1), 1)
+assert_eq(dijkstra_map.disable_point(0), OK)
+assert_eq(dijkstra_map.disable_point(1), FAILED)
 ```
 ### <a id="func-enable_point"></a>func enable_point(point_id: [int]) -> [int]
 ________
@@ -227,8 +263,8 @@ Points are enabled by default.
 ```gdscript
 var dijkstra_map = DijkstraMap.new()
 dijkstra_map.add_point(0)
-assert_eq(dijkstra_map.enable_point(0), 0)
-assert_eq(dijkstra_map.enable_point(1), 1)
+assert_eq(dijkstra_map.enable_point(0), OK)
+assert_eq(dijkstra_map.enable_point(1), FAILED)
 ```
 ### <a id="func-is_point_disabled"></a>func is_point_disabled(point_id: [int]) -> [bool]
 ________
@@ -242,9 +278,9 @@ var dijkstra_map = DijkstraMap.new()
 dijkstra_map.add_point(0)
 dijkstra_map.add_point(1)
 dijkstra_map.disable_point(0)
-assert(dijkstra_map.is_point_disabled(0))
-assert(!dijkstra_map.is_point_disabled(1)) # not disabled
-assert(!dijkstra_map.is_point_disabled(2)) # not in the map
+assert_true(dijkstra_map.is_point_disabled(0))
+assert_false(dijkstra_map.is_point_disabled(1)) # not disabled
+assert_false(dijkstra_map.is_point_disabled(2)) # not in the map
 ```
 ### <a id="func-connect_points"></a>func connect_points(source: [int], target: [int], weight: [float] (opt), bidirectional: [bool] (opt)) -> [int]
 ________
@@ -266,12 +302,18 @@ var dijkstra_map = DijkstraMap.new()
 dijkstra_map.add_point(0)
 dijkstra_map.add_point(1)
 dijkstra_map.add_point(2)
-dijkstra_map.connect_points(0, 1, 2.0)
-dijkstra_map.connect_points(1, 2, 1.0, false)
+dijkstra_map.add_point(3)
+# bidirectional is enabled by default
+assert_eq(dijkstra_map.connect_points(0, 1, 2.0), OK)
+# default weight is 1.0
+assert_eq(dijkstra_map.connect_points(1, 2), OK)
+assert_eq(dijkstra_map.connect_points(1, 3, 1.0, false), OK)
 # produces the graph :
-# 0 <---> 1 ----> 2
-#    2.0     1.0
-assert_eq(dijkstra_map.connect_points(1, 3), 1) # 3 does not exists in the map
+# 0 <---> 1 <---> 2 ----> 3
+#    2.0     1.0     1.0
+assert_eq(dijkstra_map.connect_points(1, 4), FAILED, "4 does not exists in the map")
+assert_eq(dijkstra_map.connect_points(1, 5, 1.0), FAILED, "5 does not exists in the map")
+assert_eq(dijkstra_map.connect_points(1, 6, 1.0, true), FAILED, "6 does not exists in the map")
 ```
 ### <a id="func-remove_connection"></a>func remove_connection(source: [int], target: [int], bidirectional: [bool] (opt)) -> [int]
 ________
@@ -285,19 +327,19 @@ Remove a connection between the two given points.
     connection from target to source.
 #### Errors
 
-Returns [FAILED] if one of the points does not exist.
+Returns [FAILED] if one of the points does not exist. Else, returns [OK].
 #### Example
 ```gdscript
 var dijkstra_map = DijkstraMap.new()
 dijkstra_map.add_point(0)
 dijkstra_map.add_point(1)
 dijkstra_map.connect_points(0, 1)
-dijkstra_map.remove_connection(0, 1)
-assert_eq(dijkstra_map.remove_connection(0, 2), 1) # 2 does not exists in the map
+assert_eq(dijkstra_map.remove_connection(0, 1), OK)
+assert_eq(dijkstra_map.remove_connection(0, 2), FAILED) # 2 does not exists in the map
 dijkstra_map.connect_points(0, 1)
 # only removes connection from 0 to 1
-dijkstra_map.remove_connection(0, 1, false)
-assert(dijkstra_map.has_connection(1, 0))
+assert_eq(dijkstra_map.remove_connection(0, 1, false), OK)
+assert_true(dijkstra_map.has_connection(1, 0))
 ```
 ### <a id="func-has_connection"></a>func has_connection(source: [int], target: [int]) -> [bool]
 ________
@@ -311,9 +353,9 @@ var dijkstra_map = DijkstraMap.new()
 dijkstra_map.add_point(0)
 dijkstra_map.add_point(1)
 dijkstra_map.connect_points(0, 1, 1.0, false)
-assert(dijkstra_map.has_connection(0, 1))
-assert(!dijkstra_map.has_connection(1, 0))
-assert(!dijkstra_map.has_connection(0, 2))
+assert_true(dijkstra_map.has_connection(0, 1))
+assert_false(dijkstra_map.has_connection(1, 0))
+assert_false(dijkstra_map.has_connection(0, 2))
 ```
 ### <a id="func-get_direction_at_point"></a>func get_direction_at_point(point_id: [int]) -> [int]
 ________
@@ -386,7 +428,7 @@ actually uses Dijkstra's algorithm.
     - `"terrain_weights":` [Dictionary] (default : empty) :  \
         Specifies weights of terrain types. Keys are terrain type
         IDs and values are floats. Unspecified terrains will have
-        [infinite](https://docs.godotengine.org/en/stable/classes/class_@gdscript.html#constants) weight.  \
+        [infinite](https://docs.godotengine.org/en/3.5/classes/class_@gdscript.html#constants) weight.  \
         Note that `-1` correspond to the default terrain (which have
         a weight of `1.0`), and will thus be ignored if it appears in
         the keys.
@@ -415,7 +457,7 @@ var optional_params = {
 dijkstra_map.recalculate(0, optional_params)
 assert_eq(dijkstra_map.get_direction_at_point(0), 0)
 assert_eq(dijkstra_map.get_direction_at_point(1), 0)
-# 2 is too far from 0, so because we set "maximum_cost" to 2.0, it is innaccessible.
+# 2 is too far from 0, so because we set "maximum_cost" to 2.0, it is inaccessible.
 assert_eq(dijkstra_map.get_direction_at_point(2), -1)
 ```
 ### <a id="func-get_direction_at_points"></a>func get_direction_at_points(points: [PoolIntArray]) -> [PoolIntArray]
@@ -460,7 +502,7 @@ assert_eq(Array(dijkstra_map.get_cost_at_points(PoolIntArray([0, 1, 2]))), [0.0,
 ________
 
 
-Returns the entire Dijktra map of costs in form of a
+Returns the entire Dijkstra map of costs in form of a
 `Dictionary`.
 
 Keys are points' IDs, and values are costs. Inaccessible points
@@ -489,7 +531,7 @@ Keys are points' IDs, and values are the next point along the
 shortest path.
 ##### Note
 
-Unreacheable points are not present in the map.
+Unreachable points are not present in the map.
 #### Example
 ```gdscript
 var dijkstra_map = DijkstraMap.new()
@@ -572,7 +614,7 @@ coordinates of points ([Vector2]) and values are their
 corresponding point IDs.
 #### Note
 
-Hexgrid is in the "pointy" orentation by default (see example
+Hexgrid is in the "pointy" orientation by default (see example
 below).
 
 To switch to "flat" orientation, swap `width` and `height`, and
@@ -595,24 +637,24 @@ This is what `dijkstra_map.add_hexagonal_grid(Rect2(1, 4, 2, 3), ...)` would pro
     \ /     \ /
 ```
 
-[AStar]: https://docs.godotengine.org/en/stable/classes/class_astar.html
-[Array]: https://docs.godotengine.org/en/stable/classes/class_array.html
-[Dictionary]: https://docs.godotengine.org/en/stable/classes/class_dictionary.html
-[FAILED]: https://docs.godotengine.org/en/stable/classes/class_@globalscope.html#enum-globalscope-error
-[INF]: https://docs.godotengine.org/en/stable/classes/class_@gdscript.html#constants
-[Int32Array]: https://docs.godotengine.org/en/stable/classes/class_poolintarray.html
-[NAN]: https://docs.godotengine.org/en/stable/classes/class_@gdscript.html#constants
-[OK]: https://docs.godotengine.org/en/stable/classes/class_@globalscope.html#enum-globalscope-error
-[PoolIntArray]: https://docs.godotengine.org/en/stable/classes/class_poolintarray.html
-[PoolRealArray]: https://docs.godotengine.org/en/stable/classes/class_poolrealarray.html
-[Rect2]: https://docs.godotengine.org/en/stable/classes/class_rect2.html
-[Reference]: https://docs.godotengine.org/en/stable/classes/class_reference.html
-[Transform2D]: https://docs.godotengine.org/en/stable/classes/class_transform2d.html
-[Variant]: https://docs.godotengine.org/en/stable/classes/class_variant.html
-[Vector2]: https://docs.godotengine.org/en/stable/classes/class_vector2.html
-[array]: https://docs.godotengine.org/en/stable/classes/class_poolintarray.html
-[bool]: https://docs.godotengine.org/en/stable/classes/class_bool.html
-[false]: https://docs.godotengine.org/en/stable/classes/class_bool.html
-[float]: https://docs.godotengine.org/en/stable/classes/class_float.html
-[int]: https://docs.godotengine.org/en/stable/classes/class_int.html
-[true]: https://docs.godotengine.org/en/stable/classes/class_bool.html
+[AStar]: https://docs.godotengine.org/en/3.5/classes/class_astar.html
+[Array]: https://docs.godotengine.org/en/3.5/classes/class_array.html
+[Dictionary]: https://docs.godotengine.org/en/3.5/classes/class_dictionary.html
+[FAILED]: https://docs.godotengine.org/en/3.5/classes/class_@globalscope.html#enum-globalscope-error
+[INF]: https://docs.godotengine.org/en/3.5/classes/class_@gdscript.html#constants
+[Int32Array]: https://docs.godotengine.org/en/3.5/classes/class_poolintarray.html
+[NAN]: https://docs.godotengine.org/en/3.5/classes/class_@gdscript.html#constants
+[OK]: https://docs.godotengine.org/en/3.5/classes/class_@globalscope.html#enum-globalscope-error
+[PoolIntArray]: https://docs.godotengine.org/en/3.5/classes/class_poolintarray.html
+[PoolRealArray]: https://docs.godotengine.org/en/3.5/classes/class_poolrealarray.html
+[Rect2]: https://docs.godotengine.org/en/3.5/classes/class_rect2.html
+[Reference]: https://docs.godotengine.org/en/3.5/classes/class_reference.html
+[Transform2D]: https://docs.godotengine.org/en/3.5/classes/class_transform2d.html
+[Variant]: https://docs.godotengine.org/en/3.5/classes/class_variant.html
+[Vector2]: https://docs.godotengine.org/en/3.5/classes/class_vector2.html
+[array]: https://docs.godotengine.org/en/3.5/classes/class_poolintarray.html
+[bool]: https://docs.godotengine.org/en/3.5/classes/class_bool.html
+[false]: https://docs.godotengine.org/en/3.5/classes/class_bool.html
+[float]: https://docs.godotengine.org/en/3.5/classes/class_float.html
+[int]: https://docs.godotengine.org/en/3.5/classes/class_int.html
+[true]: https://docs.godotengine.org/en/3.5/classes/class_bool.html
